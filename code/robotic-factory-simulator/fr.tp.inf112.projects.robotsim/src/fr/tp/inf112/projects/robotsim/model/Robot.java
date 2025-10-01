@@ -118,13 +118,31 @@ public class Robot extends Component {
 		return targetComponentsIterator.hasNext() ? targetComponentsIterator.next() : null;
 	}
 	
+	
+	// [ ] should check for all neighboring locations
+	private Position findFreeNeighbouringPosition() {
+		
+		Position position = new Position(getxCoordinate() + 2, getyCoordinate() + 2);
+		
+		return position;
+	}
+
 	private int moveToNextPathPosition() {
 		final Motion motion = computeMotion();
 		
-		final int displacement = motion == null ? 0 : motion.moveToTarget();
-			
-		notifyObservers();
-		
+		int displacement = motion == null ? 0 : motion.moveToTarget();
+
+		if (displacement != 0) {
+			notifyObservers();
+		}
+		else if (isLivelyLocked()) {
+			final Position freeNeighbouringPosition = findFreeNeighbouringPosition();
+			if (freeNeighbouringPosition != null) {
+				this.memorizedTargetPosition = freeNeighbouringPosition;
+				displacement = moveToNextPathPosition();
+				computePathToCurrentTargetComponent();
+			}
+		}
 		return displacement;
 	}
 	
@@ -181,7 +199,8 @@ public class Robot extends Component {
 		    return getPosition().equals(((Robot) otherComponent).getMemorizedTargetPosition());
 	    }
 	    
-	    return false;
+	    return otherComponent != null &&
+	    getPosition().equals(((Robot) otherComponent).getMemorizedTargetPosition());
 	}
 
 	private boolean hasReachedCurrentTarget() {
