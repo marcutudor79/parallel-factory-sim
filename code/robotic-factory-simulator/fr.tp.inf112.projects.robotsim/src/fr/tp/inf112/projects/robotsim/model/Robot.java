@@ -119,12 +119,31 @@ public class Robot extends Component {
 	}
 	
 	
-	// [ ] should check for all neighboring locations
+	// Should check for all neighboring locations
 	private Position findFreeNeighbouringPosition() {
 		
-		Position position = new Position(getxCoordinate() + 2, getyCoordinate() + 2);
 		
-		return position;
+		int nextXCoordinate[] = { this.getWidth(), this.getWidth(), -this.getWidth(), -this.getWidth()};
+		int nextYCoordinate[] = { this.getHeight(), -this.getHeight(), -this.getHeight(), this.getHeight()};
+		
+		for(int i = 0; i < 4; i++)
+		{
+			Position position = new Position(getxCoordinate() + nextXCoordinate[i], getyCoordinate() + nextYCoordinate[i]);
+			final PositionedShape shape = new RectangularShape(getxCoordinate(),
+					   getyCoordinate(),
+					   2,
+					   2);
+			
+			// If there is another robot, memorize the target position for the next run
+			if (!(getFactory().hasMobileComponentAt(shape, this))) {
+				this.memorizedTargetPosition = position;
+
+				return position;
+			}
+		}
+		
+
+		return null;
 	}
 
 	private int moveToNextPathPosition() {
