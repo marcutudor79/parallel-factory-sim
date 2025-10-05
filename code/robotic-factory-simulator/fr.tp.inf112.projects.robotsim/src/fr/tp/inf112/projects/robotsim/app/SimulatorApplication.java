@@ -15,7 +15,6 @@ import fr.tp.inf112.projects.robotsim.model.ChargingStation;
 import fr.tp.inf112.projects.robotsim.model.Conveyor;
 import fr.tp.inf112.projects.robotsim.model.Door;
 import fr.tp.inf112.projects.robotsim.model.Factory;
-import fr.tp.inf112.projects.robotsim.model.FactoryPersistenceManager;
 import fr.tp.inf112.projects.robotsim.model.Machine;
 import fr.tp.inf112.projects.robotsim.model.Robot;
 import fr.tp.inf112.projects.robotsim.model.Room;
@@ -25,39 +24,40 @@ import fr.tp.inf112.projects.robotsim.model.path.JGraphTDijkstraFactoryPathFinde
 import fr.tp.inf112.projects.robotsim.model.shapes.BasicPolygonShape;
 import fr.tp.inf112.projects.robotsim.model.shapes.CircularShape;
 import fr.tp.inf112.projects.robotsim.model.shapes.RectangularShape;
+import fr.tp.inf112.projects.robotsim.model.PersistenceManager;
 
 public class SimulatorApplication {
 
     public static void main(String[] args) {
-        
-        /* Instantiate logger */ 
+
+        /* Instantiate logger */
         final Logger LOGGER = Logger.getLogger(SimulatorApplication.class.getName());
         LOGGER.info("Starting the robot simulator..");
         LOGGER.config("With parameters " + Arrays.toString(args) + ".");
-        
+
         /* Create factory with rooms model */
         final Factory factory  = new Factory(200, 200, "Simple Test Puck Factory");
-        
+
         /* Create room1 */
-        final Room room1       = new Room(factory, new RectangularShape(20, 20, 
+        final Room room1       = new Room(factory, new RectangularShape(20, 20,
                                           75, 75), "Production Room 1");
-                                 new Door(room1, Room.WALL.BOTTOM, 10, 20, true, 
+                                 new Door(room1, Room.WALL.BOTTOM, 10, 20, true,
                                           "Entrance");
-        final Area area1       = new Area(room1, new RectangularShape(35, 35, 
+        final Area area1       = new Area(room1, new RectangularShape(35, 35,
                                           50, 50), "Production Area 1");
-        final Machine machine1 = new Machine(area1, new RectangularShape(50, 50, 
+        final Machine machine1 = new Machine(area1, new RectangularShape(50, 50,
                                           15, 15), "Machine 1");
 
         /* Create room2 */
-        final Room room2       = new Room(factory, new RectangularShape( 120, 22, 
+        final Room room2       = new Room(factory, new RectangularShape( 120, 22,
                                           75, 75 ), "Production Room 2");
                                  new Door(room2, Room.WALL.LEFT, 10, 20, true,
                                           "Entrance");
-        final Area area2       = new Area(room2, new RectangularShape( 135, 35, 
+        final Area area2       = new Area(room2, new RectangularShape( 135, 35,
                                           50, 50 ), "Production Area 1");
-        final Machine machine2 = new Machine(area2, new RectangularShape( 150, 50, 
+        final Machine machine2 = new Machine(area2, new RectangularShape( 150, 50,
                                           15, 15 ), "Machine 1");
-        
+
         /* Create conveyor belt in the factory */
         final int baselineSize = 3;
         final int xCoordinate = 10;
@@ -75,18 +75,18 @@ public class SimulatorApplication {
         conveyorShape.addVertex(new BasicVertex(xCoordinate, yCoordinate + height - baselineSize));
 
         /* Create a charging room */
-        final Room chargingRoom               = new Room(factory, new RectangularShape(125, 
+        final Room chargingRoom               = new Room(factory, new RectangularShape(125,
                                                          125, 50, 50), "Charging Room");
-                                                new Door(chargingRoom, Room.WALL.RIGHT, 10, 
+                                                new Door(chargingRoom, Room.WALL.RIGHT, 10,
                                                          20, false, "Entrance");
-        final ChargingStation chargingStation = new ChargingStation(factory, new RectangularShape(150, 
+        final ChargingStation chargingStation = new ChargingStation(factory, new RectangularShape(150,
                                                          145, 15, 15), "Charging Station");
 
         /* Create Djisktra path finder to be used by robots */
         final FactoryPathFinder jgraphPahtFinder = new JGraphTDijkstraFactoryPathFinder(factory, 5);
-        
+
         /* Create robots */
-        final Robot robot1 = new Robot(factory, jgraphPahtFinder, new CircularShape(5, 5, 2), 
+        final Robot robot1 = new Robot(factory, jgraphPahtFinder, new CircularShape(5, 5, 2),
                                        new Battery(10), "Robot 1");
         robot1.addTargetComponent(machine1);
         robot1.addTargetComponent(machine2);
@@ -99,19 +99,22 @@ public class SimulatorApplication {
         robot2.addTargetComponent(machine1);
         robot2.addTargetComponent(machine2);
         robot2.addTargetComponent(new Conveyor(factory, conveyorShape, "Conveyor 1"));
-        
+
         /* Invoke library for canvas */
         SwingUtilities.invokeLater(new Runnable() {
-              
+
             @Override
             public void run() {
                 final FileCanvasChooser canvasChooser = new FileCanvasChooser("factory", "Puck Factory");
 
                 /* Add persitence manager here */
-                final Component factoryViewer         = new CanvasViewer(new SimulatorController(factory, new FactoryPersistenceManager(canvasChooser)));
+                final Component factoryViewer         = new CanvasViewer(new SimulatorController(factory, new PersistenceManager(canvasChooser, "localhost", 55555)));
+
+                /* This is where the menu is set to the factory viewer */
                 canvasChooser.setViewer(factoryViewer);
                 //new CanvasViewer(factory);
             }
         });
+
     }
 }
