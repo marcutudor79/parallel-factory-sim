@@ -118,13 +118,50 @@ public class Robot extends Component {
 		return targetComponentsIterator.hasNext() ? targetComponentsIterator.next() : null;
 	}
 	
+	
+	// Should check for all neighboring locations
+	private Position findFreeNeighbouringPosition() {
+		
+		
+		int nextXCoordinate[] = { this.getWidth(), this.getWidth(), -this.getWidth(), -this.getWidth()};
+		int nextYCoordinate[] = { this.getHeight(), -this.getHeight(), -this.getHeight(), this.getHeight()};
+		
+		for(int i = 0; i < 4; i++)
+		{
+			Position position = new Position(getxCoordinate() + nextXCoordinate[i], getyCoordinate() + nextYCoordinate[i]);
+			final PositionedShape shape = new RectangularShape(getxCoordinate(),
+					   getyCoordinate(),
+					   2,
+					   2);
+			
+			// If there is another robot, memorize the target position for the next run
+			if (!(getFactory().hasMobileComponentAt(shape, this))) {
+				this.memorizedTargetPosition = position;
+
+				return position;
+			}
+		}
+		
+
+		return null;
+	}
+
 	private int moveToNextPathPosition() {
 		final Motion motion = computeMotion();
 		
-		final int displacement = motion == null ? 0 : motion.moveToTarget();
-			
-		notifyObservers();
-		
+		int displacement = motion == null ? 0 : motion.moveToTarget();
+
+		if (displacement != 0) {
+			notifyObservers();
+		}
+		else if (isLivelyLocked()) {
+			final Position freeNeighbouringPosition = findFreeNeighbouringPosition();
+			if (freeNeighbouringPosition != null) {
+				this.memorizedTargetPosition = freeNeighbouringPosition;
+				displacement = moveToNextPathPosition();
+				computePathToCurrentTargetComponent();
+			}
+		}
 		return displacement;
 	}
 	
@@ -181,7 +218,8 @@ public class Robot extends Component {
 		    return getPosition().equals(((Robot) otherComponent).getMemorizedTargetPosition());
 	    }
 	    
-	    return false;
+	    return otherComponent != null &&
+	    getPosition().equals(((Robot) otherComponent).getMemorizedTargetPosition());
 	}
 
 	private boolean hasReachedCurrentTarget() {
