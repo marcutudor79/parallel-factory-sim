@@ -8,13 +8,13 @@ import javax.swing.SwingUtilities;
 
 import fr.tp.inf112.projects.canvas.model.impl.BasicVertex;
 import fr.tp.inf112.projects.canvas.view.CanvasViewer;
-import fr.tp.inf112.projects.canvas.view.FileCanvasChooser;
 import fr.tp.inf112.projects.robotsim.model.Area;
 import fr.tp.inf112.projects.robotsim.model.Battery;
 import fr.tp.inf112.projects.robotsim.model.ChargingStation;
 import fr.tp.inf112.projects.robotsim.model.Conveyor;
 import fr.tp.inf112.projects.robotsim.model.Door;
 import fr.tp.inf112.projects.robotsim.model.Factory;
+import fr.tp.inf112.projects.robotsim.model.HardcodedFileCanvasChooser;
 import fr.tp.inf112.projects.robotsim.model.Machine;
 import fr.tp.inf112.projects.robotsim.model.Robot;
 import fr.tp.inf112.projects.robotsim.model.Room;
@@ -105,7 +105,21 @@ public class SimulatorApplication {
 
             @Override
             public void run() {
-                final FileCanvasChooser canvasChooser = new FileCanvasChooser("factory", "Puck Factory");
+                final String saveDir = "~/RobotFactoryPersistance/canvases"; // hardcoded path
+                final java.io.File saveDirFile = new java.io.File(saveDir);
+                if (saveDirFile.exists()) {
+                    if (!saveDirFile.isDirectory()) {
+                        LOGGER.severe("Save path exists but is not a directory: " + saveDir);
+                        // handle error: choose different path or exit silently
+                    }
+                } else {
+                    if (!saveDirFile.mkdirs()) {
+                        LOGGER.severe("Failed to create save directory: " + saveDir);
+                        // handle error: choose different path or notify user
+                    }
+                }
+                final HardcodedFileCanvasChooser canvasChooser =
+                new HardcodedFileCanvasChooser(saveDir, "factory", "Puck Factory");
 
                 /* Add persitence manager here */
                 final Component factoryViewer         = new CanvasViewer(new SimulatorController(factory, new PersistenceManager(canvasChooser, "localhost", 55555)));
