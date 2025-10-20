@@ -13,7 +13,7 @@ import fr.tp.inf112.projects.robotsim.model.shapes.PositionedShape;
 import fr.tp.inf112.projects.robotsim.model.shapes.RectangularShape;
 
 public class Robot extends Component {
-	
+
 	private static final long serialVersionUID = -1218857231970296747L;
 
 	private static final Style STYLE = new ComponentStyle(RGBColor.GREEN, RGBColor.BLACK, 3.0f, null);
@@ -21,21 +21,21 @@ public class Robot extends Component {
 	private static final Style BLOCKED_STYLE = new ComponentStyle(RGBColor.RED, RGBColor.BLACK, 3.0f, new float[]{4.0f});
 
 	private final Battery battery;
-	
+
 	private int speed;
-	
+
 	private List<Component> targetComponents;
-	
+
 	private transient Iterator<Component> targetComponentsIterator;
-	
+
 	private Component currTargetComponent;
-	
+
 	private transient Iterator<Position> currentPathPositionsIter;
-	
+
 	private transient boolean blocked;
-	
+
 	private Position memorizedTargetPosition;
-	
+
 	private FactoryPathFinder pathFinder;
 
 	public Robot(final Factory factory,
@@ -44,11 +44,11 @@ public class Robot extends Component {
 				 final Battery battery,
 				 final String name ) {
 		super(factory, shape, name);
-		
+
 		this.pathFinder = pathFinder;
-		
+
 		this.battery = battery;
-		
+
 		targetComponents = new ArrayList<>();
 		currTargetComponent = null;
 		currentPathPositionsIter = null;
@@ -69,27 +69,27 @@ public class Robot extends Component {
 	protected void setSpeed(final int speed) {
 		this.speed = speed;
 	}
-	
+
 	public Position getMemorizedTargetPosition() {
 		return memorizedTargetPosition;
 	}
-	
+
 	private List<Component> getTargetComponents() {
 		if (targetComponents == null) {
 			targetComponents = new ArrayList<>();
 		}
-		
+
 		return targetComponents;
 	}
-	
+
 	public boolean addTargetComponent(final Component targetComponent) {
 		return getTargetComponents().add(targetComponent);
 	}
-	
+
 	public boolean removeTargetComponent(final Component targetComponent) {
 		return getTargetComponents().remove(targetComponent);
 	}
-	
+
 	@Override
 	public boolean isMobile() {
 		return true;
@@ -100,32 +100,32 @@ public class Robot extends Component {
 		if (getTargetComponents().isEmpty()) {
 			return false;
 		}
-		
+
 		if (currTargetComponent == null || hasReachedCurrentTarget()) {
 			currTargetComponent = nextTargetComponentToVisit();
-			
+
 			computePathToCurrentTargetComponent();
 		}
 
 		return moveToNextPathPosition() != 0;
 	}
-		
+
 	private Component nextTargetComponentToVisit() {
 		if (targetComponentsIterator == null || !targetComponentsIterator.hasNext()) {
 			targetComponentsIterator = getTargetComponents().iterator();
 		}
-		
+
 		return targetComponentsIterator.hasNext() ? targetComponentsIterator.next() : null;
 	}
-	
-	
+
+
 	// Should check for all neighboring locations
 	private Position findFreeNeighbouringPosition() {
-		
-		
+
+
 		int nextXCoordinate[] = { this.getWidth(), this.getWidth(), -this.getWidth(), -this.getWidth()};
 		int nextYCoordinate[] = { this.getHeight(), -this.getHeight(), -this.getHeight(), this.getHeight()};
-		
+
 		for(int i = 0; i < 4; i++)
 		{
 			Position position = new Position(getxCoordinate() + nextXCoordinate[i], getyCoordinate() + nextYCoordinate[i]);
@@ -133,7 +133,7 @@ public class Robot extends Component {
 					   getyCoordinate(),
 					   2,
 					   2);
-			
+
 			// If there is another robot, memorize the target position for the next run
 			if (!(getFactory().hasMobileComponentAt(shape, this))) {
 				this.memorizedTargetPosition = position;
@@ -141,14 +141,14 @@ public class Robot extends Component {
 				return position;
 			}
 		}
-		
+
 
 		return null;
 	}
 
 	private int moveToNextPathPosition() {
 		final Motion motion = computeMotion();
-		
+
 		int displacement = motion == null ? 0 : motion.moveToTarget();
 
 		if (displacement != 0) {
@@ -164,60 +164,60 @@ public class Robot extends Component {
 		}
 		return displacement;
 	}
-	
+
 	private void computePathToCurrentTargetComponent() {
 		final List<Position> currentPathPositions = pathFinder.findPath(this, currTargetComponent);
 		currentPathPositionsIter = currentPathPositions.iterator();
 	}
-	
+
 	private Motion computeMotion() {
 		if (!currentPathPositionsIter.hasNext()) {
 
 			// There is no free path to the target
 			blocked = true;
-			
+
 			return null;
 		}
-		
-		
+
+
 		final Position targetPosition = getTargetPosition();
 		final PositionedShape shape = new RectangularShape(targetPosition.getxCoordinate(),
 														   targetPosition.getyCoordinate(),
 				   										   2,
 				   										   2);
-		
+
 		// If there is another robot, memorize the target position for the next run
 		if (getFactory().hasMobileComponentAt(shape, this)) {
 			this.memorizedTargetPosition = targetPosition;
-			
+
 			return null;
 		}
 
 		// Reset the memorized position
 		this.memorizedTargetPosition = null;
-			
+
 		return new Motion(getPosition(), targetPosition);
 	}
-	
+
 	private Position getTargetPosition() {
-		// If a target position was memorized, it means that the robot was blocked during the last iteration 
-		// so it waited for another robot to pass. So try to move to this memorized position otherwise move to  
+		// If a target position was memorized, it means that the robot was blocked during the last iteration
+		// so it waited for another robot to pass. So try to move to this memorized position otherwise move to
 		// the next position from the path
 		return this.memorizedTargetPosition == null ? currentPathPositionsIter.next() : this.memorizedTargetPosition;
 	}
-	
+
 	public boolean isLivelyLocked() {
 	    if (memorizedTargetPosition == null) {
 	        return false;
 	    }
-			
-	    final Component otherComponent = getFactory().getMobileComponentAt(memorizedTargetPosition,     
+
+	    final Component otherComponent = getFactory().getMobileComponentAt(memorizedTargetPosition,
 	                                                                   this);
 
 	    if (otherComponent instanceof Robot)  {
 		    return getPosition().equals(((Robot) otherComponent).getMemorizedTargetPosition());
 	    }
-	    
+
 	    return otherComponent != null &&
 	    getPosition().equals(((Robot) otherComponent).getMemorizedTargetPosition());
 	}
@@ -225,12 +225,12 @@ public class Robot extends Component {
 	private boolean hasReachedCurrentTarget() {
 		return getPositionedShape().overlays(currTargetComponent.getPositionedShape());
 	}
-	
+
 	@Override
 	public boolean canBeOverlayed(final PositionedShape shape) {
 		return true;
 	}
-	
+
 	@Override
 	public Style getStyle() {
 		return blocked ? BLOCKED_STYLE : STYLE;
