@@ -105,7 +105,7 @@ public class SimulatorApplication {
 
             @Override
             public void run() {
-                final String saveDir = "~/RobotFactoryPersistance/canvases"; // hardcoded path
+                final String saveDir = "./../persistance.robotsim"; // hardcoded path
                 final java.io.File saveDirFile = new java.io.File(saveDir);
                 if (saveDirFile.exists()) {
                     if (!saveDirFile.isDirectory()) {

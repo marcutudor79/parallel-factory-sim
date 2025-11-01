@@ -17,7 +17,7 @@ public class SimulatorController {
     private SimulationService service;
     private static final Logger logger = Logger.getLogger(SimulatorController.class.getName());
 
-    public SimulatorController(SimulationService service) {
+	public SimulatorController(SimulationService service) {
         this.service = service;
     }
 
