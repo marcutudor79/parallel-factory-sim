@@ -105,24 +105,12 @@ public class SimulatorApplication {
 
             @Override
             public void run() {
-                final String saveDir = "./../persistance.robotsim"; // hardcoded path
-                final java.io.File saveDirFile = new java.io.File(saveDir);
-                if (saveDirFile.exists()) {
-                    if (!saveDirFile.isDirectory()) {
-                        LOGGER.severe("Save path exists but is not a directory: " + saveDir);
-                        // handle error: choose different path or exit silently
-                    }
-                } else {
-                    if (!saveDirFile.mkdirs()) {
-                        LOGGER.severe("Failed to create save directory: " + saveDir);
-                        // handle error: choose different path or notify user
-                    }
-                }
+                /* Create canvas chooser */
                 final HardcodedFileCanvasChooser canvasChooser =
-                new HardcodedFileCanvasChooser(saveDir, "factory", "Puck Factory");
+                new HardcodedFileCanvasChooser("factory", "Puck Factory");
 
                 /* Add persitence manager here */
-                final Component factoryViewer         = new CanvasViewer(new SimulatorController(factory, new PersistenceManager(canvasChooser, "localhost", 55555)));
+                final Component factoryViewer = new CanvasViewer(new SimulatorController(factory, new PersistenceManager(canvasChooser, "localhost", 55555)));
 
                 /* This is where the menu is set to the factory viewer */
                 canvasChooser.setViewer(factoryViewer);
