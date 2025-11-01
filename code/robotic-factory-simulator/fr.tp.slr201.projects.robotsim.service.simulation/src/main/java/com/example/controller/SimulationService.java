@@ -2,6 +2,7 @@ package com.example.controller;
 
 /* Spring related packets */
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -27,9 +28,9 @@ public class SimulationService {
     /* Map of active factory simulation models */
     private final ConcurrentMap<String, Factory> activeSimulations = new ConcurrentHashMap<>();
 
-    public SimulationService(String persistenceBaseUrl) {
-        /* Hardcoded port for the persistence server */
-        this.persistenceBaseUrl = persistenceBaseUrl;
+     public SimulationService(@Value("${persistence.base-url}") String persistenceBaseUrl) {
+        // ensure trailing slash for simple concatenation
+        this.persistenceBaseUrl = persistenceBaseUrl.endsWith("/") ? persistenceBaseUrl : persistenceBaseUrl + "/";
     }
 
     /*
