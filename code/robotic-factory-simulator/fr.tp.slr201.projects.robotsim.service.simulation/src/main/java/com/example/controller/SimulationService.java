@@ -11,26 +11,23 @@ import org.springframework.web.client.RestTemplate;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Logger;
-
+import javax.swing.SwingUtilities;
 /* RobotSim related packets */
 import fr.tp.inf112.projects.robotsim.model.Factory;
+import fr.tp.inf112.projects.robotsim.model.PersistenceClient;
 
 /**
  * Fetches canvas models from the persistence web server and manages active Factory simulations.
  */
 @Service
 public class SimulationService {
-    private final RestTemplate rest = new RestTemplate();
-    private final ObjectMapper mapper = new ObjectMapper();
-    private final String persistenceBaseUrl;
     private static final Logger logger = Logger.getLogger(SimulationService.class.getName());
-
-    /* Map of active factory simulation models */
     private final ConcurrentMap<String, Factory> activeSimulations = new ConcurrentHashMap<>();
+    private PersistenceClient persistenceClient = null;
 
-     public SimulationService(@Value("${persistence.base-url}") String persistenceBaseUrl) {
+    public SimulationService(@Value("${persistence.addr}") String persistanceAddr, @Value("${persistence.port}") int persistancePort) {
         // ensure trailing slash for simple concatenation
-        this.persistenceBaseUrl = persistenceBaseUrl.endsWith("/") ? persistenceBaseUrl : persistenceBaseUrl + "/";
+        this.persistenceClient = new PersistenceClient(persistanceAddr, persistancePort);
     }
 
     /*
@@ -55,27 +52,21 @@ public class SimulationService {
 
         logger.info("Model ID: " + id + " not loaded. Fetching from persistence server.");
         try {
-            /* GET http://<persistence>/{id} */
-            String url = persistenceBaseUrl + id;
-            ResponseEntity<Object> resp = rest.getForEntity(url, Object.class);
-            if (!resp.getStatusCode().is2xxSuccessful() || resp.getBody() == null) {
-                logger.warning("Failed to fetch model ID: " + id + " from persistence server. Status: " + resp.getStatusCode());
-                return false;
-            }
-
-            /* Get the payload from the body and try to convert to Factory */
-            Object payload = resp.getBody();
-            Factory factory = (payload instanceof Factory)
-                    ? (Factory) payload
-                    : mapper.convertValue(payload, Factory.class);
+            Factory factory = persistenceClient.retrieveFactory(id);
             if (factory == null) {
-                logger.warning("Failed to convert payload to Factory for model ID: " + id);
+                logger.warning("No factory retrieved from persistence server for model ID: " + id);
                 return false;
             }
             logger.info("Successfully fetched model ID: " + id + " from persistence server.");
 
-            /* Add factory to map of id, factories */
-            factory.startSimulation();
+            /* Do not block the springboot app */
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    factory.startSimulation();
+                }
+            });
+
             activeSimulations.put(id, factory);
             logger.info("Simulation for model ID: " + id + " started successfully after fetching.");
             return true;

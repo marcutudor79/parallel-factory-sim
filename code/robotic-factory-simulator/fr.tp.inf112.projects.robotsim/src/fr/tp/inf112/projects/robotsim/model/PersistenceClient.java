@@ -100,6 +100,22 @@ public class PersistenceClient {
         return canvas;
     }
 
+    /*
+     *  Retrieve a Factory from the server by id
+     *
+     *  @param factoryId The id of the factory to retrieve
+     */
+    public Factory retrieveFactory(final String factoryId)
+    throws IOException {
+        Canvas canvas = retrieveCanvas(factoryId);
+        if (canvas instanceof Factory) {
+            return (Factory) canvas;
+        } else {
+            LOGGER.warning("Retrieved canvas is not a Factory.");
+            return null;
+        }
+    }
+
     /* Save a canvas to the server
      *
      * @param canvasModel The canvas model to save
