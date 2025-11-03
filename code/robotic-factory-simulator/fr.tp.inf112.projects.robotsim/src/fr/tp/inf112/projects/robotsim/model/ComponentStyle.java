@@ -1,14 +1,16 @@
 package fr.tp.inf112.projects.robotsim.model;
 
 import java.io.Serializable;
-
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import fr.tp.inf112.projects.canvas.model.Color;
 import fr.tp.inf112.projects.canvas.model.Style;
 import fr.tp.inf112.projects.canvas.model.Stroke;
 import fr.tp.inf112.projects.canvas.model.impl.RGBColor;
 
 public class ComponentStyle implements Style, Stroke, Serializable {
-	
+
 	private static final long serialVersionUID = -782486828505388494L;
 
 	public static final ComponentStyle DEFAULT = new ComponentStyle();
@@ -24,13 +26,13 @@ public class ComponentStyle implements Style, Stroke, Serializable {
     public final static float[] DEFAULT_DASH_PATTERN = {4.0f};
 
     private Color backgroundColor;
-    
+
     private Color lineColor;
 
     private float lineThickness;
-    
+
     final float[] dashPattern;
-	
+
 	public ComponentStyle() {
 		this(null);
 	}
@@ -65,6 +67,7 @@ public class ComponentStyle implements Style, Stroke, Serializable {
 
 
 	@Override
+    @JsonIgnore // prevent self-reference (style -> stroke -> style)
 	public Stroke getStroke() {
 		return this;
 	}

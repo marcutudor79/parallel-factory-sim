@@ -8,16 +8,27 @@ import fr.tp.inf112.projects.robotsim.model.shapes.PositionedShape;
 import fr.tp.inf112.projects.canvas.model.Shape;
 
 public abstract class Component implements Figure, Serializable {
-	
+
 	private static final long serialVersionUID = -5960950869184030220L;
 
 	private String id;
 
 	private final Factory factory;
-	
+
 	private final PositionedShape positionedShape;
-	
+
 	private final String name;
+
+    /* Used by Jackson serialization */
+    public Component()
+    {
+        super();
+
+        // initialize final/transient fields so Jackson can use the no-arg constructor
+        this.factory = null;
+        this.positionedShape = null;
+        this.name = null;
+    }
 
 	protected Component(final Factory factory,
 						final PositionedShape shape,
@@ -30,7 +41,7 @@ public abstract class Component implements Figure, Serializable {
 			factory.addComponent(this);
 		}
 	}
-	
+
 	public String getId() {
 		return id;
 	}
@@ -42,7 +53,7 @@ public abstract class Component implements Figure, Serializable {
 	public PositionedShape getPositionedShape() {
 		return positionedShape;
 	}
-	
+
 	public Position getPosition() {
 		return getPositionedShape().getPosition();
 	}
@@ -59,10 +70,10 @@ public abstract class Component implements Figure, Serializable {
 	protected boolean setxCoordinate(int xCoordinate) {
 		if ( getPositionedShape().setxCoordinate( xCoordinate ) ) {
 			notifyObservers();
-			
+
 			return true;
 		}
-		
+
 		return false;
 	}
 
@@ -74,10 +85,10 @@ public abstract class Component implements Figure, Serializable {
 	protected boolean setyCoordinate(final int yCoordinate) {
 		if (getPositionedShape().setyCoordinate(yCoordinate) ) {
 			notifyObservers();
-			
+
 			return true;
 		}
-		
+
 		return false;
 	}
 
@@ -88,7 +99,7 @@ public abstract class Component implements Figure, Serializable {
 	public String getName() {
 		return name;
 	}
-	
+
 	@Override
 	public String toString() {
 		return getClass().getSimpleName() + " [name=" + name + " xCoordinate=" + getxCoordinate() + ", yCoordinate=" + getyCoordinate()
@@ -102,37 +113,37 @@ public abstract class Component implements Figure, Serializable {
 	public int getHeight() {
 		return getPositionedShape().getHeight();
 	}
-	
+
 	public boolean behave() {
 		return false;
 	}
-	
+
 	public boolean isMobile() {
 		return false;
 	}
-	
+
 	public boolean overlays(final Component component) {
 		return overlays(component.getPositionedShape());
 	}
-	
+
 	public boolean overlays(final PositionedShape shape) {
 		return getPositionedShape().overlays(shape);
 	}
-	
+
 	public boolean canBeOverlayed(final PositionedShape shape) {
 		return false;
 	}
-	
+
 	@Override
 	public Style getStyle() {
 		return ComponentStyle.DEFAULT;
 	}
-	
+
 	@Override
 	public Shape getShape() {
 		return getPositionedShape();
 	}
-	
+
 	public boolean isSimulationStarted() {
 		return getFactory().isSimulationStarted();
 	}

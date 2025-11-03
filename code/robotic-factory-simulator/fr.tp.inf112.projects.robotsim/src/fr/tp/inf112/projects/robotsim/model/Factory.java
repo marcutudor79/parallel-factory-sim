@@ -3,7 +3,6 @@ package fr.tp.inf112.projects.robotsim.model;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-
 import fr.tp.inf112.projects.canvas.controller.Observable;
 import fr.tp.inf112.projects.canvas.controller.Observer;
 import fr.tp.inf112.projects.canvas.model.Canvas;
@@ -15,31 +14,41 @@ import fr.tp.inf112.projects.robotsim.model.shapes.RectangularShape;
 public class Factory extends Component implements Canvas, Observable {
 
 	private static final long serialVersionUID = 5156526483612458192L;
-	
-	private static final ComponentStyle DEFAULT = new ComponentStyle(5.0f);
 
+	private static final ComponentStyle DEFAULT = new ComponentStyle(5.0f);
 
     private final List<Component> components;
 
 	private transient List<Observer> observers;
 
 	private transient boolean simulationStarted;
-	
+
+    /* Used by Jackson serialization */
+    public Factory()
+    {
+        super();
+
+        // initialize final/transient fields so Jackson can use the no-arg constructor
+        this.components = new ArrayList<>();
+        this.observers = null;
+        this.simulationStarted = false;
+    }
+
 	public Factory(final int width,
 				   final int height,
 				   final String name ) {
 		super(null, new RectangularShape(0, 0, width, height), name);
-		
+
 		components = new ArrayList<>();
 		observers = null;
 		simulationStarted = false;
 	}
-	
+
 	protected List<Observer> getObservers() {
 		if (observers == null) {
 			observers = new ArrayList<>();
 		}
-		
+
 		return observers;
 	}
 
@@ -52,30 +61,30 @@ public class Factory extends Component implements Canvas, Observable {
 	public boolean removeObserver(Observer observer) {
 		return getObservers().remove(observer);
 	}
-	
+
 	protected void notifyObservers() {
 		for (final Observer observer : getObservers()) {
 			observer.modelChanged();
 		}
 	}
-	
+
 	public boolean addComponent(final Component component) {
 		if (components.add(component)) {
 			notifyObservers();
-			
+
 			return true;
 		}
-		
+
 		return false;
 	}
 
 	public boolean removeComponent(final Component component) {
 		if (components.remove(component)) {
 			notifyObservers();
-			
+
 			return true;
 		}
-		
+
 		return false;
 	}
 
@@ -93,7 +102,7 @@ public class Factory extends Component implements Canvas, Observable {
 	public String toString() {
 		return super.toString() + " components=" + components + "]";
 	}
-	
+
 	public boolean isSimulationStarted() {
 		return simulationStarted;
 	}
@@ -105,7 +114,7 @@ public class Factory extends Component implements Canvas, Observable {
 
 			while (isSimulationStarted()) {
 				behave();
-				
+
 				try {
 					Thread.sleep(100);
 				}
@@ -119,7 +128,7 @@ public class Factory extends Component implements Canvas, Observable {
 	public void stopSimulation() {
 		if (isSimulationStarted()) {
 			this.simulationStarted = false;
-			
+
 			notifyObservers();
 		}
 	}
@@ -127,29 +136,29 @@ public class Factory extends Component implements Canvas, Observable {
 	@Override
 	public boolean behave() {
 		boolean behaved = true;
-		
+
 		for (final Component component : getComponents()) {
 			behaved = component.behave() || behaved;
 		}
-		
+
 		return behaved;
 	}
-	
+
 	@Override
 	public Style getStyle() {
 		return DEFAULT;
 	}
-	
+
 	public boolean hasObstacleAt(final PositionedShape shape) {
 		for (final Component component : getComponents()) {
 			if (component.overlays(shape) && !component.canBeOverlayed(shape)) {
 				return true;
 			}
 		}
-		
+
 		return false;
 	}
-	
+
 	public boolean hasMobileComponentAt(final PositionedShape shape,
 										final Component movingComponent) {
 		for (final Component component : getComponents()) {
@@ -157,31 +166,31 @@ public class Factory extends Component implements Canvas, Observable {
 				return true;
 			}
 		}
-		
+
 		return false;
 	}
-	
+
 	public Component getMobileComponentAt(	final Position position,
 											final Component ignoredComponent) {
 		if (position == null) {
 			return null;
 		}
-		
+
 		return getMobileComponentAt(new RectangularShape(position.getxCoordinate(), position.getyCoordinate(), 2, 2), ignoredComponent);
 	}
-	
+
 	public Component getMobileComponentAt(	final PositionedShape shape,
 											final Component ignoredComponent) {
 		if (shape == null) {
 			return null;
 		}
-		
+
 		for (final Component component : getComponents()) {
 			if (component != ignoredComponent && component.isMobile() && component.overlays(shape)) {
 				return component;
 			}
 		}
-		
+
 		return null;
 	}
 }
