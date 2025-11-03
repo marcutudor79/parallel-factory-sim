@@ -11,16 +11,23 @@ import fr.tp.inf112.projects.canvas.model.Style;
 import fr.tp.inf112.projects.robotsim.model.shapes.PositionedShape;
 import fr.tp.inf112.projects.robotsim.model.shapes.RectangularShape;
 
+/* Jackson related packages */
+import com.fasterxml.jackson.annotation.*;
+
+
 public class Factory extends Component implements Canvas, Observable {
 
 	private static final long serialVersionUID = 5156526483612458192L;
 
 	private static final ComponentStyle DEFAULT = new ComponentStyle(5.0f);
 
+    @JsonManagedReference // manage bi-directional references during serialization
     private final List<Component> components;
 
+    @JsonIgnore // prevent Jackson from serializing transient fields
 	private transient List<Observer> observers;
 
+    @JsonIgnore // prevent Jackson from serializing transient fields
 	private transient boolean simulationStarted;
 
     /* Used by Jackson serialization */
@@ -94,6 +101,7 @@ public class Factory extends Component implements Canvas, Observable {
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
+    @JsonIgnore // prevent Jackson from trying to deserialize "figures" (setterless)
 	public Collection<Figure> getFigures() {
 		return (Collection) components;
 	}
@@ -103,6 +111,7 @@ public class Factory extends Component implements Canvas, Observable {
 		return super.toString() + " components=" + components + "]";
 	}
 
+    @JsonIgnore  // The idea is that simulation state is not persisted since it is transient
 	public boolean isSimulationStarted() {
 		return simulationStarted;
 	}
@@ -145,6 +154,7 @@ public class Factory extends Component implements Canvas, Observable {
 	}
 
 	@Override
+    @JsonIgnore // prevent Jackson from trying to deserialize it, it is a constant
 	public Style getStyle() {
 		return DEFAULT;
 	}
@@ -170,6 +180,7 @@ public class Factory extends Component implements Canvas, Observable {
 		return false;
 	}
 
+    @JsonIgnore // prevent Jackson from serializing it
 	public Component getMobileComponentAt(	final Position position,
 											final Component ignoredComponent) {
 		if (position == null) {

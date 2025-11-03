@@ -1,7 +1,9 @@
 package fr.tp.inf112.projects.robotsim.model;
 
 import java.io.Serializable;
-
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonGetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import fr.tp.inf112.projects.canvas.model.Figure;
 import fr.tp.inf112.projects.canvas.model.Style;
 import fr.tp.inf112.projects.robotsim.model.shapes.PositionedShape;
@@ -13,6 +15,7 @@ public abstract class Component implements Figure, Serializable {
 
 	private String id;
 
+    @JsonBackReference // manage bi-directional references during serialization
 	private final Factory factory;
 
 	private final PositionedShape positionedShape;
@@ -54,6 +57,7 @@ public abstract class Component implements Figure, Serializable {
 		return positionedShape;
 	}
 
+    @JsonIgnore // derived from positionedShape, no need to serialize
 	public Position getPosition() {
 		return getPositionedShape().getPosition();
 	}
@@ -63,6 +67,7 @@ public abstract class Component implements Figure, Serializable {
 	}
 
 	@Override
+    @JsonIgnore // derived from positionedShape
 	public int getxCoordinate() {
 		return getPositionedShape().getxCoordinate();
 	}
@@ -78,6 +83,7 @@ public abstract class Component implements Figure, Serializable {
 	}
 
 	@Override
+    @JsonIgnore // derived from positionedShape
 	public int getyCoordinate() {
 		return getPositionedShape().getyCoordinate();
 	}
@@ -106,10 +112,12 @@ public abstract class Component implements Figure, Serializable {
 				+ ", shape=" + getPositionedShape();
 	}
 
+    @JsonIgnore // derived from positionedShape
 	public int getWidth() {
 		return getPositionedShape().getWidth();
 	}
 
+    @JsonIgnore // derived from positionedShape
 	public int getHeight() {
 		return getPositionedShape().getHeight();
 	}
@@ -118,6 +126,7 @@ public abstract class Component implements Figure, Serializable {
 		return false;
 	}
 
+    @JsonIgnore // Ignore default value
 	public boolean isMobile() {
 		return false;
 	}
@@ -135,15 +144,18 @@ public abstract class Component implements Figure, Serializable {
 	}
 
 	@Override
+    @JsonIgnore // default value
 	public Style getStyle() {
 		return ComponentStyle.DEFAULT;
 	}
 
 	@Override
+    @JsonGetter("positionedShape")
 	public Shape getShape() {
 		return getPositionedShape();
 	}
 
+    @JsonIgnore // derived from factory and transient; double trouble
 	public boolean isSimulationStarted() {
 		return getFactory().isSimulationStarted();
 	}
