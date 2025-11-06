@@ -51,7 +51,7 @@ public class Factory extends Component implements Canvas, Observable {
 		simulationStarted = false;
 	}
 
-	protected List<Observer> getObservers() {
+	public List<Observer> getObservers() {
 		if (observers == null) {
 			observers = new ArrayList<>();
 		}
@@ -69,7 +69,7 @@ public class Factory extends Component implements Canvas, Observable {
 		return getObservers().remove(observer);
 	}
 
-	protected void notifyObservers() {
+	public void notifyObservers() {
 		for (final Observer observer : getObservers()) {
 			observer.modelChanged();
 		}

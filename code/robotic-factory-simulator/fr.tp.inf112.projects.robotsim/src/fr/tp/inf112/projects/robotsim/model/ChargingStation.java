@@ -4,10 +4,15 @@ import fr.tp.inf112.projects.robotsim.model.shapes.PositionedShape;
 import fr.tp.inf112.projects.robotsim.model.shapes.RectangularShape;
 
 public class ChargingStation extends Component {
-	
+
 	private static final long serialVersionUID = -154228412357092561L;
-	
+
 	private boolean charging;
+
+    public ChargingStation() {
+        super();
+        charging = false;
+    }
 
 	public ChargingStation(final Room room,
 						   final RectangularShape shape,
@@ -19,7 +24,7 @@ public class ChargingStation extends Component {
 						   final RectangularShape shape,
 						   final String name) {
 		super(factory, shape, name);
-		
+
 		charging = false;
 	}
 

@@ -1,6 +1,8 @@
 package fr.tp.inf112.projects.robotsim.app;
 
 import java.awt.Component;
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.logging.Logger;
 
@@ -25,6 +27,7 @@ import fr.tp.inf112.projects.robotsim.model.shapes.BasicPolygonShape;
 import fr.tp.inf112.projects.robotsim.model.shapes.CircularShape;
 import fr.tp.inf112.projects.robotsim.model.shapes.RectangularShape;
 import fr.tp.inf112.projects.robotsim.model.PersistenceManager;
+import fr.tp.inf112.projects.robotsim.app.RemoteSimulatorController;
 
 public class SimulatorApplication {
 
@@ -109,12 +112,17 @@ public class SimulatorApplication {
                 final HardcodedFileCanvasChooser canvasChooser =
                 new HardcodedFileCanvasChooser("factory", "Puck Factory");
 
+                final RemoteSimulatorController controller =
+                new RemoteSimulatorController(new PersistenceManager(canvasChooser, "localhost", 55555), "localhost", "8080", "Puck_Factory_1762554691881.factory");
+
                 /* Add persitence manager here */
-                final Component factoryViewer = new CanvasViewer(new SimulatorController(factory, new PersistenceManager(canvasChooser, "localhost", 55555)));
+                final Component factoryViewer = new CanvasViewer(controller);
 
                 /* This is where the menu is set to the factory viewer */
                 canvasChooser.setViewer(factoryViewer);
-                //new CanvasViewer(factory);
+
+                // start polling (e.g., every 500ms)
+                controller.startRemotePolling(0, 500);
             }
         });
 
