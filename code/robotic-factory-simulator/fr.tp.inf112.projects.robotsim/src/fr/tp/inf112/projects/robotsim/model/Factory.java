@@ -27,8 +27,9 @@ public class Factory extends Component implements Canvas, Observable {
     @JsonIgnore // prevent Jackson from serializing transient fields
 	private transient List<Observer> observers;
 
-    @JsonIgnore // prevent Jackson from serializing transient fields
-	private transient boolean simulationStarted;
+    @JsonProperty("simulationStarted")
+    @JsonInclude(JsonInclude.Include.ALWAYS) // force presence even when false
+    private boolean simulationStarted;
 
     /* Used by Jackson serialization */
     public Factory()
@@ -111,10 +112,16 @@ public class Factory extends Component implements Canvas, Observable {
 		return super.toString() + " components=" + components + "]";
 	}
 
-    @JsonIgnore  // The idea is that simulation state is not persisted since it is transient
-	public boolean isSimulationStarted() {
-		return simulationStarted;
-	}
+    @JsonProperty("simulationStarted")
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    public boolean isSimulationStarted() {
+        return simulationStarted;
+    }
+
+    @JsonProperty("simulationStarted")
+    public void setSimulationStarted(boolean simulationStarted) {
+        this.simulationStarted = simulationStarted;
+    }
 
 	public void startSimulation() {
 		if (!isSimulationStarted()) {

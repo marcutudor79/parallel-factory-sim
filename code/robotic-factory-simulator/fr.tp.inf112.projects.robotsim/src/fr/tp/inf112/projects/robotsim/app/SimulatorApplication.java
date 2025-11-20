@@ -27,7 +27,6 @@ import fr.tp.inf112.projects.robotsim.model.shapes.BasicPolygonShape;
 import fr.tp.inf112.projects.robotsim.model.shapes.CircularShape;
 import fr.tp.inf112.projects.robotsim.model.shapes.RectangularShape;
 import fr.tp.inf112.projects.robotsim.model.PersistenceManager;
-import fr.tp.inf112.projects.robotsim.app.RemoteSimulatorController;
 
 public class SimulatorApplication {
 

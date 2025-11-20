@@ -33,6 +33,7 @@ public class RemoteSimulatorController extends SimulatorController {
     URI startSimulationURI     = null;
     URI stopSimulationURI      = null;
     URI retrieveSimulationURI  = null;
+    private Factory factoryModel = null;
 
     private static final Logger LOGGER = Logger.getLogger(RemoteSimulatorController.class.getName());
 
@@ -184,15 +185,15 @@ public class RemoteSimulatorController extends SimulatorController {
             return;
         }
         LOGGER.info("Successfully sent request to stop animation on the remote server: " + remoteAddr + ":" + remotePort);
-	}
+    }
 
     public void startRemotePolling(long initialDelayMs, long periodMs) {
         poller.scheduleAtFixedRate(() -> {
             try {
-                final Factory remote = getFactory(); // your existing method that does HTTP + Jackson
-                if (remote != null) {
+                this.factoryModel = getFactory(); // your existing method that does HTTP + Jackson
+                if (factoryModel != null) {
                     // update controller model on EDT so Swing components see changes safely
-                    SwingUtilities.invokeLater(() -> setFactoryModel(remote));
+                    SwingUtilities.invokeLater(() -> setFactoryModel(factoryModel));
                 }
             } catch (final Throwable t) {
                 LOGGER.log(Level.WARNING, "Remote polling failed", t);
@@ -203,6 +204,14 @@ public class RemoteSimulatorController extends SimulatorController {
     public void stopRemotePolling() {
         poller.shutdownNow();
     }
+
+    /**
+     * {@inheritDoc}
+     */
+	@Override
+	public boolean isAnimationRunning() {
+		return factoryModel != null && factoryModel.isSimulationStarted();
+	}
 
     // call this to replace the canvas model and notify any viewers
     public synchronized void setFactoryModel(final Factory factory) {
