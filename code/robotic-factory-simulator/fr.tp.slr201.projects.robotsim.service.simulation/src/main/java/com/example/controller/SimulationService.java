@@ -81,8 +81,29 @@ public class SimulationService {
      * Retrieve the currently simulated Canvas (Factory) by id, or null if not found.
      */
     public Factory getSimulatedModel(String id) {
-        logger.info("Retrieving simulated model for ID: " + id);
-        return activeSimulations.get(id);
+
+        /* If already in the map of active simulations, return it */
+        if (activeSimulations.containsKey(id)) {
+            logger.info("Retrieving simulated model for ID: " + id);
+            return activeSimulations.get(id);
+        }
+
+        logger.info("Model ID: " + id + " not loaded. Fetching from persistence server.");
+        try {
+            Factory factory = persistenceClient.retrieveFactory(id);
+            if (factory == null) {
+                logger.warning("No factory retrieved from persistence server for model ID: " + id);
+                return null;
+            }
+            logger.info("Successfully fetched model ID: " + id + " from persistence server.");
+
+            activeSimulations.put(id, factory);
+            return factory;
+
+        } catch (Exception e) {
+            logger.severe("Failed to fetch simulation for " + id + ": " + e.getMessage());
+            return null;
+        }
     }
 
     /**

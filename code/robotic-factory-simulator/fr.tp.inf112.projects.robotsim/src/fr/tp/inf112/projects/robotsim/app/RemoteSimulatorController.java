@@ -47,9 +47,6 @@ public class RemoteSimulatorController extends SimulatorController {
                                              "/simulation/stop/" + startFactoryId);
         this.retrieveSimulationURI = URI.create("http://" + remoteAddr + ":" + remotePort +
                                                 "/simulation/retrieve/" + startFactoryId);
-
-        /* Start the simulation on the remote server before fetching the JSON */
-        startAnimation();
     }
 
     /**
