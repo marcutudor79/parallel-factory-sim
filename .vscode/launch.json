@@ -1,0 +1,29 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "SimulatorApplication",
+            "request": "launch",
+            "mainClass": "fr.tp.inf112.projects.robotsim.app.SimulatorApplication",
+            "projectName": "fr.tp.inf112.projects.robotsim"
+        },
+        {
+            "type": "java",
+            "name": "SimulatorPersistenceServer",
+            "request": "launch",
+            "mainClass": "fr.tp.inf112.projects.robotsim.app.SimulatorPersistenceServer",
+            "projectName": "fr.tp.inf112.projects.robotsim"
+        },
+        {
+            "type": "java",
+            "name": "Spring Boot-Application<fr.tp.slr201.projects.robotsim.service.simulation>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.example.controller.Application",
+            "projectName": "fr.tp.slr201.projects.robotsim.service.simulation",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env",
+            "vmArgs": " -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=46599 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dspring.jmx.enabled=true -Djava.rmi.server.hostname=localhost -Dspring.application.admin.enabled=true -Dspring.boot.project.name=fr.tp.slr201.projects.robotsim.service.simulation"
+        }
+    ]
+}
