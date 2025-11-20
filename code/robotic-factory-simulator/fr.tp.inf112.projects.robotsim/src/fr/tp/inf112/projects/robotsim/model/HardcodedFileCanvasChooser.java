@@ -13,53 +13,38 @@ import fr.tp.inf112.projects.canvas.model.CanvasChooser;
  */
 public class HardcodedFileCanvasChooser implements CanvasChooser {
 
-    private final File baseDir;
     private final String fileExtension;
     private final String documentTypeLabel;
     private Component viewer;
+    private String lastFilename;
 
-    public HardcodedFileCanvasChooser(final String baseDirectory,
-                                      final String fileExtension,
+    public HardcodedFileCanvasChooser(final String fileExtension,
                                       final String documentTypeLabel) {
-        if (baseDirectory == null || fileExtension == null) {
-            throw new IllegalArgumentException("baseDirectory and fileExtension cannot be null");
+        if (fileExtension == null) {
+            throw new IllegalArgumentException("fileExtension cannot be null");
         }
-        this.baseDir = new File(baseDirectory);
-        this.baseDir.mkdirs();
-        this.fileExtension = fileExtension.startsWith(".") ? fileExtension.substring(1) : fileExtension;
+        this.fileExtension     = fileExtension.startsWith(".") ? fileExtension.substring(1) : fileExtension;
         this.documentTypeLabel = documentTypeLabel == null ? "" : documentTypeLabel;
+        this.lastFilename      = " ";
     }
 
+    /* TODO: Have a way of retrieving the files from the server */
     @Override
     public String choseCanvas() throws IOException {
-        final File[] matches = baseDir.listFiles(new FilenameFilter() {
-            @Override
-            public boolean accept(final File dir, final String name) {
-                return name.endsWith("." + fileExtension);
-            }
-        });
-        if (matches == null || matches.length == 0) {
-            return null;
-        }
-        // return the first match (no UI shown). Change strategy if you need different behavior.
-        final String path = matches[0].getPath();
-        // Inform the user that a canvas was chosen (this indicates the path to load).
-        showInfo("Canvas selected", "Canvas will be loaded from:\n" + path);
-        return path;
+        if (lastFilename != " ")
+            showInfo("Canvas selected", "Canvas to be loaded:\n" + lastFilename);
+        return lastFilename;
     }
 
     @Override
     public String newCanvasId() throws IOException {
         final String safeLabel = documentTypeLabel.replaceAll("\\s+", "_");
         final String filename = safeLabel + "_" + System.currentTimeMillis() + "." + fileExtension;
-        final File f = new File(baseDir, filename);
-        // ensure parent dir exists (should already)
-        final File parent = f.getParentFile();
-        if (parent != null) parent.mkdirs();
-        final String path = f.getPath();
-        // Inform the user about the new canvas path (note: this only creates a path; saving must still occur).
-        showInfo("New canvas created", "New canvas path:\n" + path);
-        return path;
+
+        // Inform the user about the new canvas id created.
+        showInfo("New canvas created with id:\n", filename);
+        lastFilename = filename;
+        return filename;
     }
 
     /**

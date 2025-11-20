@@ -38,6 +38,12 @@ public class Robot extends Component {
 
 	private FactoryPathFinder pathFinder;
 
+    /* Used by Jackson to deserialize */
+    public Robot() {
+        super();
+        battery = null;
+    }
+
 	public Robot(final Factory factory,
 				 final FactoryPathFinder pathFinder,
 				 final CircularShape shape,
