@@ -120,7 +120,6 @@ public class SimulationService {
             logger.info("Factory model ID: " + id + " found. Stopping simulation.");
             factory.stopSimulation();
             logger.info("Simulation for model ID: " + id + " stopped successfully.");
-            activeSimulations.remove(id);
             return true;
         } catch (Exception e) {
             logger.severe("Failed to stop simulation for model ID: " + id + ". Exception: " + e.getMessage());
