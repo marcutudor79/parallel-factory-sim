@@ -16,6 +16,7 @@ import fr.tp.inf112.projects.robotsim.model.ChargingStation;
 import fr.tp.inf112.projects.robotsim.model.Conveyor;
 import fr.tp.inf112.projects.robotsim.model.Door;
 import fr.tp.inf112.projects.robotsim.model.Factory;
+import fr.tp.inf112.projects.robotsim.model.FactorySimulationEventConsumer;
 import fr.tp.inf112.projects.robotsim.model.HardcodedFileCanvasChooser;
 import fr.tp.inf112.projects.robotsim.model.Machine;
 import fr.tp.inf112.projects.robotsim.model.Robot;
@@ -112,7 +113,16 @@ public class SimulatorApplication {
                 new HardcodedFileCanvasChooser("factory", "Puck Factory");
 
                 final RemoteSimulatorController controller =
-                new RemoteSimulatorController(new PersistenceManager(canvasChooser, "localhost", 55555), "localhost", "8080", "Puck_Factory_1762554691881.factory");
+                new RemoteSimulatorController(new PersistenceManager(canvasChooser, "localhost", 55555), "localhost", "8080", "Puck_Factory_1762554691882.factory");
+
+                /* Uncomment to use local simulator controller */
+                /*
+                final SimulatorController controller = new SimulatorController(
+                new PersistenceManager(canvasChooser, "localhost", 55555));
+                */
+
+                /* Event based simulation service */
+                final FactorySimulationEventConsumer consumer = new FactorySimulationEventConsumer(controller);
 
                 /* Add persitence manager here */
                 final Component factoryViewer = new CanvasViewer(controller);
@@ -120,8 +130,16 @@ public class SimulatorApplication {
                 /* This is where the menu is set to the factory viewer */
                 canvasChooser.setViewer(factoryViewer);
 
-                // start polling (e.g., every 500ms)
+                /* Uncomment for remote service polling, instead of kafka */
+                /*
                 controller.startRemotePolling(0, 500);
+                */
+                new Thread () {
+                    @Override
+                    public void run() {
+                        consumer.consumeMessages();
+                    }
+                }.start();
             }
         });
 

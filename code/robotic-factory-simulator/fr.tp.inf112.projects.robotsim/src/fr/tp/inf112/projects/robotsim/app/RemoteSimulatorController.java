@@ -33,32 +33,51 @@ public class RemoteSimulatorController extends SimulatorController {
     URI startSimulationURI     = null;
     URI stopSimulationURI      = null;
     URI retrieveSimulationURI  = null;
-    private Factory factoryModel = null;
 
     private static final Logger LOGGER = Logger.getLogger(RemoteSimulatorController.class.getName());
 
-	public RemoteSimulatorController(final CanvasPersistenceManager persistenceManager, String remoteAddr, String remotePort, String startFactoryId) {
+    public RemoteSimulatorController(final CanvasPersistenceManager persistenceManager,
+                                     String remoteAddr,
+                                     String remotePort,
+                                     String startFactoryId) {
         super(null, persistenceManager);
         this.httpClient     = HttpClient.newHttpClient();
         this.remoteAddr     = remoteAddr;
         this.remotePort     = remotePort;
-        this.startSimulationURI = URI.create("http://" + remoteAddr + ":" + remotePort +
-                                             "/simulation/start/" + startFactoryId);
-        this.stopSimulationURI  = URI.create("http://" + remoteAddr + ":" + remotePort +
-                                             "/simulation/stop/" + startFactoryId);
-        this.retrieveSimulationURI = URI.create("http://" + remoteAddr + ":" + remotePort +
-                                                "/simulation/retrieve/" + startFactoryId);
+        this.startSimulationURI = URI.create("http://" + remoteAddr + ":" + remotePort + "/simulation/start/" + startFactoryId);
+        this.stopSimulationURI  = URI.create("http://" + remoteAddr + ":" + remotePort + "/simulation/stop/" + startFactoryId);
+        this.retrieveSimulationURI = URI.create("http://" + remoteAddr + ":" + remotePort + "/simulation/retrieve/" + startFactoryId);
+        super.factoryModel  = getFactoryFromRemote();
     }
 
-    /**
-     *  The method to get the factory model being currently simulated
-     *  on the remote simulation server.
+    /** Method to extract a Factory model from a JSON text.
      *
+     * @return Factory model extracted from the JSON text.
      */
-    @Override
-    public Factory getCanvas() {
-        Canvas c = getFactory();
-        return (c instanceof Factory) ? (Factory) c : null;
+    Factory extractFactoryFromJson(final String body)
+    {
+        Factory factory = null;
+
+        // Build a type validator similar to your test so polymorphic type info is allowed
+        PolymorphicTypeValidator ptv = BasicPolymorphicTypeValidator.builder()
+                .allowIfSubType(PositionedShape.class.getPackageName())
+                .allowIfSubType(Component.class.getPackageName())
+                .allowIfSubType("fr.tp.inf112.projects.canvas.model.impl")
+                .allowIfSubType("java.util")
+                .build();
+
+        ObjectMapper mapper = new ObjectMapper()
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        mapper.activateDefaultTyping(ptv, ObjectMapper.DefaultTyping.NON_FINAL);
+
+        try {
+            factory = mapper.readValue(body, Factory.class);
+        } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, "Failed to parse Factory from JSON", e);
+            return null;
+        }
+
+        return factory;
     }
 
     /**
@@ -66,7 +85,7 @@ public class RemoteSimulatorController extends SimulatorController {
      *
      * @return The factory model retrieved from the remote simulation server.
      */
-    private Factory getFactory() {
+    private Factory getFactoryFromRemote() {
         LOGGER.info("Building request to get the factory from the remote server: " + remoteAddr + ":" + remotePort);
         HttpRequest getReqRetrieveFact = HttpRequest.newBuilder()
                 .uri(retrieveSimulationURI)
@@ -96,19 +115,7 @@ public class RemoteSimulatorController extends SimulatorController {
 
             LOGGER.info("Received JSON: " + body);
 
-            // Build a type validator similar to your test so polymorphic type info is allowed
-            PolymorphicTypeValidator ptv = BasicPolymorphicTypeValidator.builder()
-                    .allowIfSubType(PositionedShape.class.getPackageName())
-                    .allowIfSubType(Component.class.getPackageName())
-                    .allowIfSubType("fr.tp.inf112.projects.canvas.model.impl")
-                    .allowIfSubType("java.util")
-                    .build();
-
-            ObjectMapper mapper = new ObjectMapper()
-                    .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-            mapper.activateDefaultTyping(ptv, ObjectMapper.DefaultTyping.NON_FINAL);
-
-            Factory factory = mapper.readValue(body, Factory.class);
+            Factory factory = extractFactoryFromJson(body);
             LOGGER.info("Successfully parsed factory from remote server");
             return factory;
 
@@ -123,16 +130,23 @@ public class RemoteSimulatorController extends SimulatorController {
     */
     @Override
     public void setCanvas(final Canvas canvasModel) {
+        // Capture observers from previous factory (if any)
+        Factory previous = (Factory) getCanvas();
+        List<Observer> prevObservers = (previous != null)
+                ? previous.getNotifier().getObservers()
+                : java.util.Collections.emptyList();
 
-        final List<Observer> observers = getCanvas().getObservers();
-
+        // Install new canvas (SimulatorController handles internal reference)
         super.setCanvas(canvasModel);
 
-        for (final Observer observer : observers) {
-            getCanvas().addObserver(observer);
+        // Re‑attach observers to new factory
+        Factory current = (Factory) getCanvas();
+        if (current != null) {
+            for (Observer o : prevObservers) {
+                current.addObserver(o);
+            }
+            current.notifyObservers();
         }
-
-        getCanvas().notifyObservers();
     }
 
 	/**
@@ -187,15 +201,16 @@ public class RemoteSimulatorController extends SimulatorController {
         LOGGER.info("Successfully sent request to stop animation on the remote server: " + remoteAddr + ":" + remotePort);
     }
 
+    /* ToDo: 1. Get the JSON text from FactorySimulatorEventConsumer
+             2. Set the factory model to the JSON parsed into factory*/
     public void startRemotePolling(long initialDelayMs, long periodMs) {
         poller.scheduleAtFixedRate(() -> {
             try {
-                this.factoryModel = getFactory(); // your existing method that does HTTP + Jackson
-                if (factoryModel != null) {
-                    // update controller model on EDT so Swing components see changes safely
-                    SwingUtilities.invokeLater(() -> setFactoryModel(factoryModel));
+                final Factory remote = getFactoryFromRemote();
+                if (remote != null) {
+                    SwingUtilities.invokeLater(() -> setFactoryModel(remote));
                 }
-            } catch (final Throwable t) {
+            } catch (Throwable t) {
                 LOGGER.log(Level.WARNING, "Remote polling failed", t);
             }
         }, initialDelayMs, periodMs, TimeUnit.MILLISECONDS);
@@ -210,13 +225,26 @@ public class RemoteSimulatorController extends SimulatorController {
      */
 	@Override
 	public boolean isAnimationRunning() {
-		return factoryModel != null && factoryModel.isSimulationStarted();
+        Factory f = (Factory) getCanvas();
+        return f != null && f.isSimulationStarted();
 	}
 
-    // call this to replace the canvas model and notify any viewers
     public synchronized void setFactoryModel(final Factory factory) {
-        LOGGER.fine("setFactoryModel called; EDT=" + javax.swing.SwingUtilities.isEventDispatchThread() + " factory=" + (factory != null));
-        // Delegate to base class which handles observer transfer and notification
-        super.setCanvas(factory);
+        // Delegate to setCanvas (observer transfer handled there)
+        setCanvas(factory);
+    }
+
+    /**
+     * Method to set the factory model from a JSON text.
+     * @param jsonFactory
+     */
+    public synchronized void setJsonFactoryModel(final String jsonFactory) {
+        Factory factory = extractFactoryFromJson(jsonFactory);
+        if (factory != null) {
+            setFactoryModel(factory);
+        }
+        else {
+            LOGGER.warning("Received invalid JSON factory model");
+        }
     }
 }

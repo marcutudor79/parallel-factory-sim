@@ -2,8 +2,10 @@ package com.example.controller;
 
 /* Spring related packets */
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -12,9 +14,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Logger;
 import javax.swing.SwingUtilities;
+
 /* RobotSim related packets */
 import fr.tp.inf112.projects.robotsim.model.Factory;
 import fr.tp.inf112.projects.robotsim.model.PersistenceClient;
+import fr.tp.inf112.projects.robotsim.model.FactoryModelChangedNotifier;
 
 /**
  * Fetches canvas models from the persistence web server and manages active Factory simulations.
@@ -24,6 +28,9 @@ public class SimulationService {
     private static final Logger logger = Logger.getLogger(SimulationService.class.getName());
     private final ConcurrentMap<String, Factory> activeSimulations = new ConcurrentHashMap<>();
     private PersistenceClient persistenceClient = null;
+
+    @Autowired /* Attribute obtained from Config Bean */
+    private KafkaTemplate<String, Factory> simulationEventTemplate;
 
     public SimulationService(@Value("${persistence.addr}") String persistanceAddr, @Value("${persistence.port}") int persistancePort) {
         // ensure trailing slash for simple concatenation
@@ -58,6 +65,11 @@ public class SimulationService {
                 return false;
             }
             logger.info("Successfully fetched model ID: " + id + " from persistence server.");
+
+            /* Set notifier of factory class to KafkaFactoryModelChangeNotifier */
+            final FactoryModelChangedNotifier notifier =
+                new KafkaFactoryModelChangeNotifier(factory, simulationEventTemplate);
+            factory.setNotifier(notifier);
 
             /* Do not block the springboot app */
             SwingUtilities.invokeLater(new Runnable() {
@@ -96,6 +108,11 @@ public class SimulationService {
                 return null;
             }
             logger.info("Successfully fetched model ID: " + id + " from persistence server.");
+
+            /* Set notifier of factory class to KafkaFactoryModelChangeNotifier */
+            final FactoryModelChangedNotifier notifier =
+                new KafkaFactoryModelChangeNotifier(factory, simulationEventTemplate);
+            factory.setNotifier(notifier);
 
             activeSimulations.put(id, factory);
             return factory;

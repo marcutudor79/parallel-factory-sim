@@ -24,12 +24,13 @@ public class Factory extends Component implements Canvas, Observable {
     @JsonManagedReference // manage bi-directional references during serialization
     private final List<Component> components;
 
-    @JsonIgnore // prevent Jackson from serializing transient fields
-	private transient List<Observer> observers;
-
     @JsonProperty("simulationStarted")
     @JsonInclude(JsonInclude.Include.ALWAYS) // force presence even when false
     private boolean simulationStarted;
+
+    /* Used to notify all oberservers */
+    @JsonIgnore // prevent Jackson from serializing it
+    private transient FactoryModelChangedNotifier notifier;
 
     /* Used by Jackson serialization */
     public Factory()
@@ -37,9 +38,8 @@ public class Factory extends Component implements Canvas, Observable {
         super();
 
         // initialize final/transient fields so Jackson can use the no-arg constructor
-        this.components = new ArrayList<>();
-        this.observers = null;
-        this.simulationStarted = false;
+        components = new ArrayList<>();
+        notifier   = new Notifier();
     }
 
 	public Factory(final int width,
@@ -48,32 +48,39 @@ public class Factory extends Component implements Canvas, Observable {
 		super(null, new RectangularShape(0, 0, width, height), name);
 
 		components = new ArrayList<>();
-		observers = null;
 		simulationStarted = false;
+        notifier = new Notifier();
 	}
 
-	public List<Observer> getObservers() {
-		if (observers == null) {
-			observers = new ArrayList<>();
-		}
+    public FactoryModelChangedNotifier getNotifier() {
+        if (notifier == null) {
+            notifier = new Notifier();
+        }
+        return notifier;
+    }
 
-		return observers;
-	}
+    /* Used to override the local notifier with a kafka one */
+    public void setNotifier(FactoryModelChangedNotifier notifier) {
+        this.notifier = notifier;
+    }
 
 	@Override
 	public boolean addObserver(Observer observer) {
-		return getObservers().add(observer);
+        if (observer == null) return false;
+		return notifier.addObserver(observer);
 	}
 
 	@Override
 	public boolean removeObserver(Observer observer) {
-		return getObservers().remove(observer);
+        if (observer == null) return false;
+		return notifier.removeObserver(observer);
 	}
 
 	public void notifyObservers() {
-		for (final Observer observer : getObservers()) {
-			observer.modelChanged();
-		}
+//		for (final Observer observer : getObservers()) {
+//			observer.modelChanged();
+//		}
+        getNotifier().notifyObservers();
 	}
 
 	public boolean addComponent(final Component component) {

@@ -8,7 +8,7 @@ import fr.tp.inf112.projects.robotsim.model.Factory;
 
 public class SimulatorController implements CanvasViewerController {
 
-    private Factory factoryModel;
+    protected Factory factoryModel;
 
     private final CanvasPersistenceManager persistenceManager;
 
@@ -30,9 +30,8 @@ public class SimulatorController implements CanvasViewerController {
     private void installObserversOnFactory(final Factory f) {
         if (f == null) return;
         for (final Observer o : controllerObservers) {
-            // avoid duplicates
-            if (!f.getObservers().contains(o)) {
-                f.addObserver(o);
+            if (!f.getNotifier().getObservers().contains(o)) {
+                f.addObserver(o); // safe now (notifier guaranteed non-null)
             }
         }
     }
