@@ -31,8 +31,24 @@ public class HardcodedFileCanvasChooser implements CanvasChooser {
     /* TODO: Have a way of retrieving the files from the server */
     @Override
     public String choseCanvas() throws IOException {
-        if (lastFilename != " ")
-            showInfo("Canvas selected", "Canvas to be loaded:\n" + lastFilename);
+        // Search local persistence dir for the most recent file with the expected extension
+        final File dir = new File("code/robotic-factory-simulator/robotsim.persistance");
+        if (!dir.isDirectory()) {
+            showError("Load failed", "Directory not found:\n" + dir.getPath());
+            return lastFilename;
+        }
+        final String suffix = "." + fileExtension;
+        File[] candidates = dir.listFiles((d, name) -> name.endsWith(suffix));
+        if (candidates == null || candidates.length == 0) {
+            showError("Load failed", "No *" + suffix + " files found in:\n" + dir.getPath());
+            return lastFilename;
+        }
+        // Pick the newest by lastModified
+        File newest = java.util.Arrays.stream(candidates)
+                .max(java.util.Comparator.comparingLong(File::lastModified))
+                .orElse(candidates[0]);
+        lastFilename = newest.getName(); // keep only file name (e.g., Puck_Factory_*.factory)
+        showInfo("Canvas selected", "Most recent canvas:\n" + lastFilename);
         return lastFilename;
     }
 
