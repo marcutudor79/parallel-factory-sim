@@ -47,6 +47,7 @@ public class RemoteSimulatorController extends SimulatorController {
         this.startSimulationURI = URI.create("http://" + remoteAddr + ":" + remotePort + "/simulation/start/" + startFactoryId);
         this.stopSimulationURI  = URI.create("http://" + remoteAddr + ":" + remotePort + "/simulation/stop/" + startFactoryId);
         this.retrieveSimulationURI = URI.create("http://" + remoteAddr + ":" + remotePort + "/simulation/retrieve/" + startFactoryId);
+        super.factoryModel  = getFactoryFromRemote();
     }
 
     /** Method to extract a Factory model from a JSON text.

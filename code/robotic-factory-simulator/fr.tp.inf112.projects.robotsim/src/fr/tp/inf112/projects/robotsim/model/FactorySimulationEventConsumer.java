@@ -12,7 +12,7 @@ import java.util.logging.Logger;
 
 /* Spring related packages */
 import org.apache.kafka.clients.consumer.KafkaConsumer;
-import com.fasterxml.jackson.databind.deser.std.StringDeserializer;
+import org.apache.kafka.common.serialization.StringDeserializer;
 
 /* Kafka related packages */
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -44,12 +44,12 @@ public class FactorySimulationEventConsumer {
 
     public void consumeMessages() {
         try {
-            while (controller.isAnimationRunning()) {
+            while (true) {
                 final ConsumerRecords<String, String> records =
                     consumer.poll(Duration.ofMillis(100));
-
+                LOGGER.info("Polled " + records.count() + " records from Kafka broker.");
                 for (final ConsumerRecord<String, String> record : records) {
-                    LOGGER.fine("Received JSON Factory text '" + record.value() + "'.");
+                    LOGGER.info("Received JSON Factory text '" + record.value() + "'.");
                     controller.setJsonFactoryModel(record.value());
                 }
             }

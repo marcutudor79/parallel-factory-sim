@@ -10,10 +10,12 @@ public class SimulationServiceUtils {
     public static final String BOOTSTRAP_SERVERS = "localhost:9092";
     private static final String GROUP_ID = "Factory-Simulation-Group";
     private static final String AUTO_OFFSET_RESET = "earliest";
-    private static final String TOPIC = "simulation-topic-";
+    private static final String TOPIC = "simulation-";
 
     public static String getTopicName(final Factory factoryModel) {
-        return TOPIC + factoryModel.getId();
+        String rawId = factoryModel.getId();
+        String baseId = rawId.substring(rawId.lastIndexOf('/') + 1).replaceFirst("\\.factory$", "");
+        return TOPIC + baseId;
     }
 
     public static Properties getDefaultConsumerProperties() {

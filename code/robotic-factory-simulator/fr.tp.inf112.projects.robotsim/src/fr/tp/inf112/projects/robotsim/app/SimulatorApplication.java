@@ -113,7 +113,7 @@ public class SimulatorApplication {
                 new HardcodedFileCanvasChooser("factory", "Puck Factory");
 
                 final RemoteSimulatorController controller =
-                new RemoteSimulatorController(new PersistenceManager(canvasChooser, "localhost", 55555), "localhost", "8080", "Puck_Factory_1762554691881.factory");
+                new RemoteSimulatorController(new PersistenceManager(canvasChooser, "localhost", 55555), "localhost", "8080", "Puck_Factory_1762554691882.factory");
 
                 /* Uncomment to use local simulator controller */
                 /*

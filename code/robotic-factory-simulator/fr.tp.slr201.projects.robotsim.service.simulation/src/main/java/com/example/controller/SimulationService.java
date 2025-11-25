@@ -109,6 +109,11 @@ public class SimulationService {
             }
             logger.info("Successfully fetched model ID: " + id + " from persistence server.");
 
+            /* Set notifier of factory class to KafkaFactoryModelChangeNotifier */
+            final FactoryModelChangedNotifier notifier =
+                new KafkaFactoryModelChangeNotifier(factory, simulationEventTemplate);
+            factory.setNotifier(notifier);
+
             activeSimulations.put(id, factory);
             return factory;
 
