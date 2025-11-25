@@ -6,6 +6,7 @@
 package fr.tp.inf112.projects.robotsim.model;
 
 import fr.tp.inf112.projects.canvas.controller.Observer;
+import java.util.List;
 
 public interface FactoryModelChangedNotifier {
 
@@ -23,4 +24,9 @@ public interface FactoryModelChangedNotifier {
      *  Removes observers from the notifier.
      */
     boolean removeObserver(Observer observer);
+
+    /**
+     * Retrieves the list of registered observers.
+     */
+    List<Observer> getObservers();
 }

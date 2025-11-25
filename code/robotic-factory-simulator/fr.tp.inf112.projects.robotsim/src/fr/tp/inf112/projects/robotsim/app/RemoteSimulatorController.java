@@ -49,6 +49,36 @@ public class RemoteSimulatorController extends SimulatorController {
         this.retrieveSimulationURI = URI.create("http://" + remoteAddr + ":" + remotePort + "/simulation/retrieve/" + startFactoryId);
     }
 
+    /** Method to extract a Factory model from a JSON text.
+     *
+     * @return Factory model extracted from the JSON text.
+     */
+    Factory extractFactoryFromJson(final String body)
+    {
+        Factory factory = null;
+
+        // Build a type validator similar to your test so polymorphic type info is allowed
+        PolymorphicTypeValidator ptv = BasicPolymorphicTypeValidator.builder()
+                .allowIfSubType(PositionedShape.class.getPackageName())
+                .allowIfSubType(Component.class.getPackageName())
+                .allowIfSubType("fr.tp.inf112.projects.canvas.model.impl")
+                .allowIfSubType("java.util")
+                .build();
+
+        ObjectMapper mapper = new ObjectMapper()
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        mapper.activateDefaultTyping(ptv, ObjectMapper.DefaultTyping.NON_FINAL);
+
+        try {
+            factory = mapper.readValue(body, Factory.class);
+        } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, "Failed to parse Factory from JSON", e);
+            return null;
+        }
+
+        return factory;
+    }
+
     /**
      * Method to retrieve the factory model from the remote simulation server.
      *
@@ -84,19 +114,7 @@ public class RemoteSimulatorController extends SimulatorController {
 
             LOGGER.info("Received JSON: " + body);
 
-            // Build a type validator similar to your test so polymorphic type info is allowed
-            PolymorphicTypeValidator ptv = BasicPolymorphicTypeValidator.builder()
-                    .allowIfSubType(PositionedShape.class.getPackageName())
-                    .allowIfSubType(Component.class.getPackageName())
-                    .allowIfSubType("fr.tp.inf112.projects.canvas.model.impl")
-                    .allowIfSubType("java.util")
-                    .build();
-
-            ObjectMapper mapper = new ObjectMapper()
-                    .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-            mapper.activateDefaultTyping(ptv, ObjectMapper.DefaultTyping.NON_FINAL);
-
-            Factory factory = mapper.readValue(body, Factory.class);
+            Factory factory = extractFactoryFromJson(body);
             LOGGER.info("Successfully parsed factory from remote server");
             return factory;
 
@@ -182,6 +200,8 @@ public class RemoteSimulatorController extends SimulatorController {
         LOGGER.info("Successfully sent request to stop animation on the remote server: " + remoteAddr + ":" + remotePort);
     }
 
+    /* ToDo: 1. Get the JSON text from FactorySimulatorEventConsumer
+             2. Set the factory model to the JSON parsed into factory*/
     public void startRemotePolling(long initialDelayMs, long periodMs) {
         poller.scheduleAtFixedRate(() -> {
             try {
@@ -211,5 +231,19 @@ public class RemoteSimulatorController extends SimulatorController {
     public synchronized void setFactoryModel(final Factory factory) {
         // Delegate to setCanvas (observer transfer handled there)
         setCanvas(factory);
+    }
+
+    /**
+     * Method to set the factory model from a JSON text.
+     * @param jsonFactory
+     */
+    public synchronized void setJsonFactoryModel(final String jsonFactory) {
+        Factory factory = extractFactoryFromJson(jsonFactory);
+        if (factory != null) {
+            setFactoryModel(factory);
+        }
+        else {
+            LOGGER.warning("Received invalid JSON factory model");
+        }
     }
 }

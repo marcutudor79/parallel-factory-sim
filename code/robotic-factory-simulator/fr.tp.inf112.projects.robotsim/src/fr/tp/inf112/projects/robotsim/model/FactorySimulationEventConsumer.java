@@ -1,0 +1,62 @@
+package fr.tp.inf112.projects.robotsim.model;
+
+/* Robotsim related packages */
+import fr.tp.inf112.projects.robotsim.model.SimulationServiceUtils;
+import fr.tp.inf112.projects.robotsim.app.RemoteSimulatorController;
+
+/* Java related packages */
+import java.util.Collections;
+import java.util.Properties;
+import java.time.Duration;
+import java.util.logging.Logger;
+
+/* Spring related packages */
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import com.fasterxml.jackson.databind.deser.std.StringDeserializer;
+
+/* Kafka related packages */
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+
+/* Class used to:
+   1. receive the kafka events from the remote Kafka notifier
+   2. extract the JSON text out of them
+   3. send this text to the remote simulator controller to parse the JSON to factory */
+public class FactorySimulationEventConsumer {
+
+    private final KafkaConsumer<String, String> consumer;
+    private final RemoteSimulatorController controller;
+    private static final Logger LOGGER = Logger.getLogger(FactorySimulationEventConsumer.class.getName());
+
+    public FactorySimulationEventConsumer(final RemoteSimulatorController controller) {
+        this.controller = controller;
+        final Properties props = SimulationServiceUtils.getDefaultConsumerProperties();
+        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
+            StringDeserializer.class);
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
+            StringDeserializer.class);
+
+        this.consumer = new KafkaConsumer<>(props);
+        final String topicName = SimulationServiceUtils.getTopicName((Factory)controller.getCanvas());
+        this.consumer.subscribe(Collections.singletonList(topicName));
+    }
+
+    public void consumeMessages() {
+        try {
+            while (controller.isAnimationRunning()) {
+                final ConsumerRecords<String, String> records =
+                    consumer.poll(Duration.ofMillis(100));
+
+                for (final ConsumerRecord<String, String> record : records) {
+                    LOGGER.fine("Received JSON Factory text '" + record.value() + "'.");
+                    controller.setJsonFactoryModel(record.value());
+                }
+            }
+        }
+        finally {
+            consumer.close();
+        }
+    }
+
+}

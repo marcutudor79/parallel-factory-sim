@@ -10,6 +10,7 @@ import fr.tp.inf112.projects.canvas.controller.Observer;
 import fr.tp.inf112.projects.robotsim.model.Factory;
 import org.springframework.messaging.Message;
 import org.springframework.kafka.support.SendResult;
+import java.util.List;
 
 public class KafkaFactoryModelChangeNotifier implements FactoryModelChangedNotifier {
 
@@ -38,6 +39,11 @@ public class KafkaFactoryModelChangeNotifier implements FactoryModelChangedNotif
     public boolean removeObserver(Observer observer) {
         return false;
         // Implementation to remove observer via Kafka
+    }
+
+    @Override
+    public List<Observer> getObservers() {
+        return null;
     }
 
     @Override
