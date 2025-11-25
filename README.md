@@ -45,9 +45,10 @@ Role summary:
 
 # How to run this project
 1. Launch Eclipse IDE and import the project
-2. Open fr.tp.inf112.projects.robotsim -> src/ dir
-3. Run the SimulationApplication.java as 1 Java App
-4. Run the SimulatorPersistenceServer.java as 1 Java App
-5. Open fr.tp.slr201.projects.robotsim.service.simulation -> src/ dir
-6. Run the Application.java as 8 Spring Boot App
-7. Start the simulation and enjoy!
+2. Open kafka and start both the zookeper and kafka-server
+3. Open fr.tp.inf112.projects.robotsim -> src/ dir
+4. Run the SimulationApplication.java as 1 Java App
+5. Run the SimulatorPersistenceServer.java as 1 Java App
+6. Open fr.tp.slr201.projects.robotsim.service.simulation -> src/ dir
+7. Run the Application.java as 8 Spring Boot App
+8. Start the simulation and enjoy!
