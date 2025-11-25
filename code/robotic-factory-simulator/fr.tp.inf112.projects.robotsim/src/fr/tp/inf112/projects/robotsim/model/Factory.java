@@ -30,7 +30,7 @@ public class Factory extends Component implements Canvas, Observable {
 
     /* Used to notify all oberservers */
     @JsonIgnore // prevent Jackson from serializing it
-    private transient Notifier notifier;
+    private transient FactoryModelChangedNotifier notifier;
 
     /* Used by Jackson serialization */
     public Factory()
@@ -39,7 +39,7 @@ public class Factory extends Component implements Canvas, Observable {
 
         // initialize final/transient fields so Jackson can use the no-arg constructor
         components = new ArrayList<>();
-        notifier = new Notifier();
+        notifier   = new Notifier();
     }
 
 	public Factory(final int width,
@@ -52,11 +52,16 @@ public class Factory extends Component implements Canvas, Observable {
         notifier = new Notifier();
 	}
 
-    public Notifier getNotifier() {
+    public FactoryModelChangedNotifier getNotifier() {
         if (notifier == null) {
             notifier = new Notifier();
         }
         return notifier;
+    }
+
+    /* Used to override the local notifier with a kafka one */
+    public void setNotifier(FactoryModelChangedNotifier notifier) {
+        this.notifier = notifier;
     }
 
 	@Override
