@@ -29,7 +29,7 @@ Role summary:
 - SimulatorApplication (Swing UI): Sends control commands via HTTP; subscribes to Kafka topics to receive near real‑time factory snapshots instead of (or in addition to) polling HTTP.
 - Persistence Server: Continues to serve as socket-based persistence; may also consume Kafka to persist streamed snapshots.
 
-[!(how-it-works)](/docs/how-it-works.mp4)
+![](/docs/how-it-works.gif)
 
 # Contents
 - [How to setup project](#how-to-setup-for-the-project)
